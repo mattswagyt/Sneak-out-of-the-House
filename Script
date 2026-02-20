@@ -280,3 +280,41 @@ createButton("Stop Win Farm", function()
     winFarmActive = false
 
 end)
+
+createButton("No Walls", function()
+
+    local home = workspace:FindFirstChild("House")
+        and workspace.House:FindFirstChild("Home")
+
+    if not home then
+        error("Home folder not found")
+    end
+
+    local floors = {
+        home:FindFirstChild("1 floor"),
+        home:FindFirstChild("2 floor"),
+        home:FindFirstChild("4 floor")
+    }
+
+    local destroyed = 0
+
+    for _, floor in pairs(floors) do
+
+        if floor then
+
+            for _, obj in pairs(floor:GetDescendants()) do
+
+                if obj.Name == "Wall" and obj:IsA("Model") then
+                    obj:Destroy()
+                    destroyed += 1
+                end
+
+            end
+
+        end
+
+    end
+
+    print("Destroyed walls:", destroyed)
+
+end)
