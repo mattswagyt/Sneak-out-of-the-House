@@ -1,5 +1,4 @@
 -- Roblox Lua Script for "Sneak out of the House" (By BMF)
--- Full remake based on your Granny Multiplayer script
 
 -- Variables
 local Players = game:GetService("Players")
