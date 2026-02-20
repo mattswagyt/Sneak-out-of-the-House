@@ -1,0 +1,283 @@
+-- Roblox Lua Script for "Sneak out of the House" (By BMF)
+-- Full remake based on your Granny Multiplayer script
+
+-- Variables
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Win farm control
+local winFarmActive = false
+
+-- Create UI Elements
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local ErrorLog = Instance.new("TextLabel")
+local UIListLayout = Instance.new("UIListLayout")
+
+-- UI Properties
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Name = "SneakOutUI"
+
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Size = UDim2.new(0, 300, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = true
+
+Title.Parent = MainFrame
+Title.Text = "Sneak out of the House (By BMF)"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 18
+
+ErrorLog.Parent = MainFrame
+ErrorLog.Text = "Error Log: None"
+ErrorLog.Size = UDim2.new(1,0,0,30)
+ErrorLog.BackgroundColor3 = Color3.fromRGB(45,45,45)
+ErrorLog.TextColor3 = Color3.fromRGB(255,85,85)
+ErrorLog.Font = Enum.Font.SourceSans
+ErrorLog.TextSize = 14
+ErrorLog.TextWrapped = true
+
+UIListLayout.Parent = MainFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Toggle menu with DELETE
+UIS.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.Delete then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+-- Notification
+StarterGui:SetCore("SendNotification", {
+    Title = "Sneak out of the House Script Loaded!",
+    Text = "All features are ready.",
+    Duration = 10
+})
+
+-- Button creator
+local function createButton(name, callback)
+
+    local Button = Instance.new("TextButton")
+    Button.Parent = MainFrame
+    Button.Text = name
+    Button.Size = UDim2.new(1,0,0,30)
+    Button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    Button.TextColor3 = Color3.fromRGB(255,255,255)
+    Button.Font = Enum.Font.SourceSans
+    Button.TextSize = 16
+
+    Button.MouseButton1Click:Connect(function()
+
+        local success, err = pcall(callback)
+
+        if not success then
+            ErrorLog.Text = "Error Log: ".. tostring(err)
+        else
+            ErrorLog.Text = "Error Log: None"
+        end
+
+    end)
+
+end
+
+-- ESP helper
+local function createTracer(target,color)
+
+    local camera = workspace.CurrentCamera
+
+    local line = Drawing.new("Line")
+    line.Color = color
+    line.Thickness = 2
+    line.Visible = true
+
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+
+        if not target or not target.Parent then
+            line:Remove()
+            connection:Disconnect()
+            return
+        end
+
+        local root = target:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+
+        local pos, visible = camera:WorldToViewportPoint(root.Position)
+
+        if visible then
+
+            line.From = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y)
+            line.To = Vector2.new(pos.X,pos.Y)
+            line.Visible = true
+
+        else
+            line.Visible = false
+        end
+
+    end)
+
+end
+
+local function createNameTag(target,text,color)
+
+    local tag = Instance.new("BillboardGui")
+    tag.Name = "NameTag"
+    tag.Size = UDim2.new(0,200,0,50)
+    tag.StudsOffset = Vector3.new(0,3,0)
+    tag.AlwaysOnTop = true
+    tag.Parent = target
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = color
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+    label.Parent = tag
+
+end
+
+local function applyESP(model,name,color)
+
+    if not model then return end
+    if not model:FindFirstChild("HumanoidRootPart") then return end
+
+    if model:FindFirstChild("ESPHighlight") then return end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESPHighlight"
+    highlight.Adornee = model
+    highlight.FillColor = color
+    highlight.OutlineColor = Color3.new(1,1,1)
+    highlight.FillTransparency = 0.5
+    highlight.Parent = model
+
+    createTracer(model,color)
+    createNameTag(model,name,color)
+
+end
+
+--------------------------------------------------
+-- BUTTONS
+--------------------------------------------------
+
+createButton("Infinite Yield", function()
+
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+
+end)
+
+createButton("Dex Explorer", function()
+
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+
+end)
+
+createButton("Player ESP", function()
+
+    for _,player in pairs(Players:GetPlayers()) do
+
+        if player ~= LocalPlayer and player.Character then
+
+            applyESP(player.Character, player.Name, Color3.fromRGB(0,255,0))
+
+        end
+
+    end
+
+end)
+
+createButton("Mommy ESP", function()
+
+    local mommy = workspace.ChaseAssets.Floor2.Mommy
+    applyESP(mommy,"Mommy",Color3.fromRGB(255,105,180))
+
+end)
+
+createButton("Daddy ESP", function()
+
+    local daddy = workspace.ChaseAssets.Floor1.Daddy
+    applyESP(daddy,"Daddy",Color3.fromRGB(255,0,0))
+
+end)
+
+createButton("Sister ESP", function()
+
+    local sister = workspace.ChaseAssets.Floor0.Sister
+    applyESP(sister,"Sister",Color3.fromRGB(170,0,255))
+
+end)
+
+createButton("TP to Spawn", function()
+
+    LocalPlayer.Character:PivotTo(
+        CFrame.new(137,44,-5)
+    )
+
+end)
+
+createButton("Escape", function()
+
+    LocalPlayer.Character:PivotTo(
+        CFrame.new(
+            -47.8585739,7.98211145,30.6576824,
+            1,0,0,
+            0,1,0,
+            0,0,1
+        )
+    )
+
+end)
+
+createButton("Win Farm", function()
+
+    winFarmActive = true
+
+    task.spawn(function()
+
+        while winFarmActive do
+
+            LocalPlayer.Character:PivotTo(
+                CFrame.new(
+                    -47.8585739,7.98211145,30.6576824,
+                    1,0,0,
+                    0,1,0,
+                    0,0,1
+                )
+            )
+
+            task.wait(1)
+
+            LocalPlayer.Character:PivotTo(
+                CFrame.new(-59,9,27)
+            )
+
+            task.wait(0.5)
+
+        end
+
+    end)
+
+end)
+
+createButton("Stop Win Farm", function()
+
+    winFarmActive = false
+
+end)
